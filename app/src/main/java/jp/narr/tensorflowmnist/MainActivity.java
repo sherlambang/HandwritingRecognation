@@ -23,12 +23,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
-
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Stack;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
     private static final String TAG = "MainActivity";
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private static final int PIXEL_WIDTH = 28;
     private TextView mResultText;
     private TextView allResultText;
+    private TextView allText;
     private float mLastX;
     private float mLastY;
     private DrawModel mModel;
@@ -55,6 +56,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private PointF mTmpPiont = new PointF();
 
     private Stack<String> allwords = new Stack<String>();
+
+    private Stack<String> kalimat = new Stack<String>();
+
+    private ImageView suara_kata;
+    private ImageView suara_kalimat;
 
 
     @SuppressWarnings("SuspiciousNameCombination")
@@ -121,16 +127,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             }
         });
 
-//        View spaceButton = findViewById(R.id.button_space);
-//        spaceButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                onClickSpace();
-//            }
-//        });
+        View kalimatButton = findViewById(R.id.button_kalimat);
+        kalimatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickKalimat();
+            }
+        });
+
+        View clearKalimatButton = findViewById(R.id.clear_kalimat);
+        clearKalimatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickClearKalimat();
+            }
+        });
 
         mResultText = (TextView)findViewById(R.id.text_result);
         allResultText = (TextView)findViewById(R.id.all_result);
+        allText = (TextView)findViewById(R.id.all_text);
+        suara_kata = (ImageView)findViewById(R.id.suara_kata);
+        suara_kalimat = (ImageView)findViewById(R.id.suara_kalimat);
+
     }
 
     @Override
@@ -200,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     }
     int index = 99;
-    private void display(float[] result){
+    public void display(float[] result){
         String[] ans = {
                 "0",
                 "1",
@@ -308,8 +326,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     private void onClickAllWords() {
+        suara_kata.setVisibility(View.VISIBLE);
         tts.speak(allwords.toString().replaceAll("\\[", "").replaceAll("]", "").replaceAll(",", "").replaceAll(" ", ""),TextToSpeech.QUEUE_FLUSH,null);
         allResultText.setText(allwords.toString().replaceAll("\\[", "").replaceAll("]", "").replaceAll(",", "").replaceAll(" ", ""));
+
     }
 
     private void onClearClicked() {
@@ -325,12 +345,23 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         mDrawView.reset();
         mDrawView.invalidate();
         allwords.clear();
-
-        mResultText.setText("");
         allResultText.setText("");
+        suara_kata.setVisibility(View.INVISIBLE);
     }
 
-//    private void onClickSpace() {
-//        allResultText.setText(allwords + " | ");
-//    }
+    private void onClickClearKalimat() {
+        mModel.clear();
+        mDrawView.reset();
+        mDrawView.invalidate();
+        kalimat.clear();
+        allText.setText("");
+        suara_kalimat.setVisibility(View.INVISIBLE);
+    }
+
+    public void onClickKalimat() {
+        kalimat.push(allwords + "\b");
+        allText.setText(kalimat.toString().replaceAll("\\[", "").replaceAll("]", "").replaceAll(",", "").replaceAll(" ", ""));
+        suara_kalimat.setVisibility(View.VISIBLE);
+        tts.speak(kalimat.toString().replaceAll("\\[", "").replaceAll("]", "").replaceAll(",", "").replaceAll(" ", ""),TextToSpeech.QUEUE_FLUSH,null);
+    }
 }
